@@ -14,12 +14,14 @@ import { MotionShowcase } from '../sections/MotionShowcase';
 import { CraftNarrative } from '../sections/CraftNarrative';
 import { FashionCarousel } from '../sections/FashionCarousel';
 import { SignatureMoment } from '../sections/SignatureMoment';
+import { useCameraOrbit } from '../hooks/useCameraOrbit';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 export const LandingPage: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const { calculateOrbit } = useCameraOrbit();
 
   useGSAP(() => {
     // 1. Hero Reveal
@@ -63,7 +65,11 @@ export const LandingPage: React.FC = () => {
       rotate: 5,
     });
 
-    // 3. Motion Showcase (Pinned 3D Model Effect)
+    // 3. Motion Showcase (Pinned 3D Model Effect with zero-allocation quickSetters)
+    const setRotateY = gsap.quickSetter('.showcase-bag', 'rotationY', 'deg');
+    const setScale = gsap.quickSetter('.showcase-bag', 'scale');
+    const setZ = gsap.quickSetter('.showcase-bag', 'z', 'px');
+
     ScrollTrigger.create({
       trigger: '.showcase-section',
       start: 'top top',
@@ -74,22 +80,15 @@ export const LandingPage: React.FC = () => {
         const progress = self.progress;
         const modelViewer = document.querySelector('#bag-model') as any;
         
+        const { orbitString } = calculateOrbit(progress);
         if (modelViewer) {
-          // Rotate the model based on scroll progress
-          // Orbit: [theta] [phi] [radius]
-          const theta = -45 + (progress * 360); // Full rotation
-          const phi = 75;
-          const radius = 105;
-          modelViewer.cameraOrbit = `${theta}deg ${phi}deg ${radius}%`;
+          modelViewer.cameraOrbit = orbitString;
         }
 
-        // Background text parallax
-        gsap.to('.showcase-bag', {
-          rotationY: progress * 360,
-          scale: 1 + progress * 0.5,
-          z: progress * 200,
-          duration: 0.1,
-        });
+        // Hardware-accelerated setter updates (no new tween allocation per tick)
+        setRotateY(progress * 360);
+        setScale(1 + progress * 0.5);
+        setZ(progress * 200);
       },
     });
 
