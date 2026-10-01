@@ -6,8 +6,8 @@ export const Navigation: React.FC = () => {
     <nav className="nav-container">
       <div className="nav-logo">Aurelia</div>
       <div className="nav-actions">
-        <button className="nav-button"><Menu size={24} /></button>
-        <button className="nav-button"><ShoppingBag size={24} /></button>
+        <button className="nav-button" aria-label="Open menu"><Menu size={24} /></button>
+        <button className="nav-button" aria-label="View shopping bag"><ShoppingBag size={24} /></button>
       </div>
     </nav>
   );
